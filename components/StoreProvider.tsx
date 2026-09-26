@@ -1,0 +1,10 @@
+'use client';
+import {createContext,useContext,useEffect,useState,ReactNode} from 'react';import {CartItem,Product} from '@/lib/types';import {initialProducts} from '@/lib/products';
+type Store={products:Product[];cart:CartItem[];favorites:string[];add:(p:Product,q?:number)=>void;setQty:(id:string,q:number)=>void;remove:(id:string)=>void;clear:()=>void;toggleFavorite:(id:string)=>void;count:number;total:number;refreshProducts:()=>Promise<void>};
+const C=createContext<Store|null>(null);
+export function StoreProvider({children}:{children:ReactNode}){const [products,setProducts]=useState(initialProducts);const [cart,setCart]=useState<CartItem[]>([]);const [favorites,setFavorites]=useState<string[]>([]);const [ready,setReady]=useState(false);
+useEffect(()=>{try{setCart(JSON.parse(localStorage.getItem('lb-cart')||'[]'));setFavorites(JSON.parse(localStorage.getItem('lb-favs')||'[]'))}catch{}setReady(true);fetch('/api/products').then(r=>r.json()).then(setProducts).catch(()=>{})},[]);
+useEffect(()=>{if(ready)localStorage.setItem('lb-cart',JSON.stringify(cart))},[cart,ready]);useEffect(()=>{if(ready)localStorage.setItem('lb-favs',JSON.stringify(favorites))},[favorites,ready]);
+const add=(p:Product,q=1)=>setCart(v=>{const x=v.find(i=>i.product.id===p.id);return x?v.map(i=>i.product.id===p.id?{...i,quantity:i.quantity+q}:i):[...v,{product:p,quantity:q}]});
+const setQty=(id:string,q:number)=>setCart(v=>q<1?v.filter(i=>i.product.id!==id):v.map(i=>i.product.id===id?{...i,quantity:q}:i));const remove=(id:string)=>setCart(v=>v.filter(i=>i.product.id!==id));const clear=()=>setCart([]);const toggleFavorite=(id:string)=>setFavorites(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id]);const refreshProducts=async()=>{const r=await fetch('/api/products');setProducts(await r.json())};
+return <C.Provider value={{products,cart,favorites,add,setQty,remove,clear,toggleFavorite,count:cart.reduce((s,x)=>s+x.quantity,0),total:cart.reduce((s,x)=>s+x.product.price*x.quantity,0),refreshProducts}}>{children}</C.Provider>};export const useStore=()=>{const x=useContext(C);if(!x)throw Error('StoreProvider');return x};

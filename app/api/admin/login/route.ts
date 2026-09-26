@@ -1,0 +1,4 @@
+import {NextRequest,NextResponse} from 'next/server';import {adminToken,isAdmin} from '@/lib/admin';
+export async function GET(req:NextRequest){return NextResponse.json({authenticated:isAdmin(req.cookies.get('lb-admin')?.value)})}
+export async function POST(req:NextRequest){const {password}=await req.json();if(!process.env.ADMIN_PASSWORD)return NextResponse.json({error:'ADMIN_PASSWORD sozlanmagan'},{status:503});if(password!==process.env.ADMIN_PASSWORD)return NextResponse.json({error:'Parol noto‘g‘ri'},{status:401});const r=NextResponse.json({ok:true});r.cookies.set('lb-admin',adminToken(),{httpOnly:true,sameSite:'strict',secure:process.env.NODE_ENV==='production',maxAge:60*60*8,path:'/'});return r}
+export async function DELETE(){const r=NextResponse.json({ok:true});r.cookies.set('lb-admin','',{httpOnly:true,maxAge:0,path:'/'});return r}
