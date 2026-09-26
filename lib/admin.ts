@@ -1,0 +1,1 @@
+import {createHash,timingSafeEqual} from 'crypto';export function adminToken(){return createHash('sha256').update(`lookberry:${process.env.ADMIN_PASSWORD||''}`).digest('hex')}export function isAdmin(value?:string){if(!value||!process.env.ADMIN_PASSWORD)return false;const a=Buffer.from(value),b=Buffer.from(adminToken());return a.length===b.length&&timingSafeEqual(a,b)}

@@ -1,0 +1,1 @@
+'use client';import ProductCard from './ProductCard';import {useStore} from './StoreProvider';export default function HomeProducts(){const {products}=useStore();return <div className="product-grid">{products.slice(0,8).map(p=><ProductCard p={p} key={p.id}/>)}</div>}
